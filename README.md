@@ -22,3 +22,10 @@ After setting up file parsing I had a lot of fun playing around with various arr
 Day 2 was quite easy, with the opportunity to use on of my favourite features in any language, pattern matching! I had some additional niggles with data types and passing strings around, but it was relatively quick to get done with the base I've established from day 1.
 
 I'm on the fence about looking at interesting crates which do things like array maths handling. While probably clean, fast, and easy I think they may slow my learning speed on this adventure. I really want to get a better grip on the errors and `Results` in the language going forward.
+
+### Day 3
+Ho boy! Binary operations are something I've never really done a lot of, and in this case they may be mildly overkill since we can probably do it all with string manipulation.
+
+Regardless, the beast is slain even if some parts of it feel truly hideous to me. I'm afraid to look at some other solutions...
+
+Once again I've neglected to commit some bizarre intermediate solutions, which I regret now.
