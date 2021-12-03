@@ -141,6 +141,31 @@ fn read_txt_pairs(path: &str) -> Result<Vec<(String, i32)>, Error> {
     Ok(pair_vector)
 }
 
+// i can probably use this as a base function and then call it with a wrapper for
+// any other input manipulation i need to do
+fn read_txt_strings(path: &str) -> Result<Vec<String>, Error> {
+    let file = File::open(path)?;
+    let br = BufReader::new(file);
+
+    let mut readings = Vec::new();
+
+    for line in br.lines() {
+        let line = line?;
+
+        let num = line
+            // get rid of any whitespaces
+            .trim()
+            .to_string();
+
+        // now that we have a beautiful integer, we add it to the vector
+        readings.push(num);
+    }
+    // unline normal return a rust function returns both a result and potentially
+    // an error, how we return a success value is as follows
+    Ok(readings)
+}
+
+
 // day 2 part 1, set comment verbosity to -v
 fn get_depth_distance_multiple(readings: &[(String, i32)]) -> i32 {
     // intermediate values
@@ -186,6 +211,150 @@ fn get_depth_distance_aim_multiple(readings: &[(String, i32)]) -> i64 {
     return horizontal_pos * depth;
 }
 
+// day 3 part 1
+fn get_gamma_and_epsilon(readings: &[String]) -> (i32, i32) {
+    // this is going to need binary operations, honestly i would rather user some
+    // assembly. also need to convert the binary encased in ints to actual values
+    let num_readings = readings.len() as i32;
+    let bit_lenght = readings[0].len();
+    let mut bit_sums = Vec::new(); // i could probably make an array here
+
+    let readings = readings.iter();
+
+    for (i, reading) in readings.enumerate() {
+        let int_value = isize::from_str_radix(reading, 2).unwrap();
+
+        // wow this is hideous, i am sure there must be a better way with bitwise
+        // operators, i could just as well iterate over the string here
+        for j in 0..bit_lenght {
+            if i == 0 {
+                bit_sums.push((int_value >> j & 1) as i32);
+            } else {
+                bit_sums[j] += (int_value >> j & 1) as i32;
+            }
+        }
+        
+    }
+
+    let mut gamma_rate = 0;
+    let mut epsilon_rate = 0;
+
+    let bit_sums = bit_sums.iter();
+    for (i, bit_sum) in bit_sums.enumerate() {
+        // if 1 was the most common bit
+        if bit_sum > &(num_readings / 2) {
+            gamma_rate += (2 as i32).pow(i as u32);
+        } else {
+            epsilon_rate += (2 as i32).pow(i as u32);
+        }
+
+    }
+    return (gamma_rate, epsilon_rate)
+}
+
+fn get_o2_co2(readings: &[String]) -> (i32, i32) {
+    // same stuff from previous function, but i feel recursion coming in my bones
+    // we are now going to use the counts to find oxygen numbers, does rust allow
+    // nested functions? yes
+
+    // so this is going to return a new list... 
+    fn get_new_list(passed_readings: &[String], passed_bit_sums: &[i32], bit_index: i32) -> (Vec<String>, Vec<String>) {
+        let mut o2_number_list = Vec::new();
+        let mut co2_number_list = Vec::new();
+        let num_passed_readings = passed_readings.len();
+        let mut most_common_bit_high = false;
+        let mut most_common_bit_equal = false;
+
+        if passed_bit_sums[bit_index as usize] as f32 > (num_passed_readings as f32 / 2.0) {
+            most_common_bit_high = true;
+        // i've probably maodified this if statement a billion times, dang types
+        } else if (passed_bit_sums[bit_index as usize] as f32) == (num_passed_readings as f32 / 2.0) {
+            most_common_bit_equal = true;
+        }
+        for passed_reading in passed_readings {
+            let int_value = isize::from_str_radix(passed_reading, 2).unwrap();
+            let bit_of_interest_high = (int_value >> bit_index & 1) == 1;
+
+            if most_common_bit_equal {
+                if bit_of_interest_high {
+                    o2_number_list.push(passed_reading.to_string());
+                } else {
+                    co2_number_list.push(passed_reading.to_string());
+                }
+            } else {
+                // i'm mildly please by this if statement
+                if bit_of_interest_high == most_common_bit_high {
+                    o2_number_list.push(passed_reading.to_string());
+                } else {
+                    co2_number_list.push(passed_reading.to_string());
+                }
+            }
+            
+            
+        }
+        return (o2_number_list, co2_number_list)
+    }
+        
+
+    // we also need a function for the most common at each bit
+    fn get_new_bit_sums(passed_readings: &[String]) -> Vec<i32> {
+        let bit_lenght = passed_readings[0].len();
+        let mut bit_sums = Vec::new(); // i could probably make an array here
+
+        let passed_readings = passed_readings.iter();
+
+        for (i, passed_reading) in passed_readings.enumerate() {
+            let int_value = isize::from_str_radix(passed_reading, 2).unwrap();
+
+            // wow this is hideous, i am sure there must be a better way with bitwise
+            // operators, i could just as well iterate over the string here
+            for j in 0..bit_lenght {
+                if i == 0 {
+                    bit_sums.push((int_value >> j & 1) as i32);
+                } else {
+                    bit_sums[j] += (int_value >> j & 1) as i32;
+                }
+            }            
+        }
+        // bit_sums are from least to most significant digit
+        return bit_sums
+    }
+
+    let starting_bit_sums = get_new_bit_sums(readings);
+    let bit_length = readings[0].len();
+
+    let mut o2_number_list = Vec::new();
+    let mut co2_number_list = Vec::new();
+    let mut o2_bit_sums = Vec::new();
+    let mut co2_bit_sums = Vec::new();
+    for i in 0..starting_bit_sums.len() {
+        let bit_index = bit_length - i - 1;
+        if i == 0 {
+            let (temp_o2, temp_co2) = get_new_list(readings, &starting_bit_sums, bit_index as i32);
+            o2_number_list = temp_o2;
+            co2_number_list = temp_co2;
+            o2_bit_sums = get_new_bit_sums(&o2_number_list);
+            co2_bit_sums = get_new_bit_sums(&co2_number_list);
+        } else {
+            if o2_number_list.len() > 1 {
+                let (temp_o2, _temp_co2) = get_new_list(&o2_number_list, &o2_bit_sums, bit_index as i32);
+                o2_number_list = temp_o2;
+                o2_bit_sums = get_new_bit_sums(&o2_number_list);
+            }
+            if co2_number_list.len() > 1 {
+                let (_temp_o2, temp_co2) = get_new_list(&co2_number_list, &co2_bit_sums, bit_index as i32);
+                co2_number_list = temp_co2;
+                co2_bit_sums = get_new_bit_sums(&co2_number_list);
+            }
+        }
+    }
+    let o2 = isize::from_str_radix(&o2_number_list[0], 2).unwrap() as i32;
+    let co2 = isize::from_str_radix(&co2_number_list[0], 2).unwrap() as i32;
+
+    // i guess recursion didn't happen
+    return (o2, co2)
+}
+
 // like a lot of other languages rust starts execution from main()
 fn main() {
     // hello
@@ -211,8 +380,19 @@ fn main() {
     println!("Multiple of final depth and position is {}", first_calc);
 
     let second_calc = get_depth_distance_aim_multiple(&readings);
-    println!("Multiple of aimed depth and position is {}", second_calc)
+    println!("Multiple of aimed depth and position is {}", second_calc);
     // day 2 stop
 
     // day 3 start
+    println!("Advent of Code 2021 Day 3");
+    let path = "./data/day3.txt";    
+    let readings = read_txt_strings(path).expect("Something went wrong with my file parsing");
+
+    let (gamma, epsilon) = get_gamma_and_epsilon(&readings);
+    println!("Multiple of gamma and epsilon are {}", gamma * epsilon);
+
+    let (o2, co2) = get_o2_co2(&readings);
+    println!("Multiple of o2 and co2 are {}", o2 * co2);
+    // day 3 stop
+
 }
