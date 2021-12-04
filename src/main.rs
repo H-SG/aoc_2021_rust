@@ -1,7 +1,6 @@
 // crates, which have to be specified in Cargo.toml unless they are common
 use std::fs::File;
 use std::io::{Error, BufReader, BufRead, ErrorKind};
-use std::collections::HashMap;
 
 // okay, let's create a function, we are passing a path as an immutable reference 
 // the function will return a result (for how rust handles errors) which contains 
@@ -252,6 +251,7 @@ fn get_gamma_and_epsilon(readings: &[String]) -> (i32, i32) {
     return (gamma_rate, epsilon_rate)
 }
 
+// day 3 part 2
 fn get_o2_co2(readings: &[String]) -> (i32, i32) {
     // same stuff from previous function, but i feel recursion coming in my bones
     // we are now going to use the counts to find oxygen numbers, does rust allow
@@ -355,6 +355,223 @@ fn get_o2_co2(readings: &[String]) -> (i32, i32) {
     return (o2, co2)
 }
 
+// day 4 part 1
+fn get_bingo_score(readings: &[String]) -> i32 {
+    // okay so readings are unparsed in the strings, first line are bingo numbers
+    // which will be read out in groups of 5 to be evaluated on the bingo boards
+    let bingo_nums: Vec<i32> = readings[0]
+        .split(',')
+        .map(|s| s.parse().expect("Something went wrong parsing the bingo_nums"))
+        .collect();
+
+    // let's make a bingo scoring function
+    fn score_board(board: &[[i32; 5]; 5]) -> (bool, i32) {
+        let mut victory = false;
+        let mut score_sum = 0;
+
+        // check if any rows or columns are completed
+        for i in 0..5 {
+            // row check
+            if board[i].iter().all(|&num| num == -1) {
+                victory = true;
+            }
+
+            // column check, a bit harder, being lazy about array building here
+            let column: Vec<i32> = board
+                .iter()
+                .map(|row| row[i])
+                .collect();
+            if column.iter().all(|&num| num == -1) {
+                victory = true;
+            }
+
+            if victory {
+                for row in board {
+                    for number in row {
+                        if number != &-1 {
+                            score_sum += number;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        return (victory, score_sum)
+    }
+
+    let mut bingo_boards = Vec::new();
+    let mut current_board = [[0; 5]; 5];
+    let mut board_row = 0;
+
+    let readings = readings.iter();
+    for (i, reading) in readings.enumerate() {        
+        // skip the bingo readings and first whitespace
+        if i < 2 {
+            continue
+        }
+
+        match reading.as_str() {
+            "" => {
+                // blank line, store and clear the bingo board
+                bingo_boards.push(current_board);
+                current_board = [[0; 5]; 5];
+                board_row = 0;
+            }
+            _ => {
+                // any other case, time to parse lines!
+                let bingo_line = reading.split_whitespace();
+
+                for (j, number) in bingo_line.enumerate() {
+                    current_board[board_row][j] = number
+                        .trim()
+                        .parse()
+                        .expect("Something went wrong parsing the number in row");
+                }
+                board_row += 1;
+            }
+        }
+    }    
+
+    // last board is still resident in current_board, so push to the array
+    bingo_boards.push(current_board);
+
+    // we have our boards, now we need to do scoring and i don't see not to use a
+    // bunch of loops again
+    for i in 0..bingo_nums.len() {
+        let curr_bingo_num = &bingo_nums[i];
+        for board in bingo_boards.iter_mut() {
+            for row in board.iter_mut() {
+                for number in row.iter_mut() {
+                    if number == curr_bingo_num {
+                        *number = -1;
+                    }
+                }
+            }
+        }
+        // let's check if any boards have won
+        for board in &bingo_boards {
+            let (victory, score) = score_board(board);
+            if victory {
+                return score * curr_bingo_num
+            }
+        }        
+    }
+
+    return 0
+}
+
+// day 4 part 1
+fn get_bingo_score_last(readings: &[String]) -> i32 {
+    // okay so readings are unparsed in the strings, first line are bingo numbers
+    // which will be read out in groups of 5 to be evaluated on the bingo boards
+    let bingo_nums: Vec<i32> = readings[0]
+        .split(',')
+        .map(|s| s.parse().expect("Something went wrong parsing the bingo_nums"))
+        .collect();
+
+    // let's make a bingo scoring function
+    fn score_board(board: &[[i32; 5]; 5]) -> (bool, i32) {
+        let mut victory = false;
+        let mut score_sum = 0;
+
+        // check if any rows or columns are completed
+        for i in 0..5 {
+            // row check
+            if board[i].iter().all(|&num| num == -1) {
+                victory = true;
+            }
+
+            // column check, a bit harder, being lazy about array building here
+            let column: Vec<i32> = board
+                .iter()
+                .map(|row| row[i])
+                .collect();
+            if column.iter().all(|&num| num == -1) {
+                victory = true;
+            }
+
+            if victory {
+                for row in board {
+                    for number in row {
+                        if number != &-1 {
+                            score_sum += number;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        return (victory, score_sum)
+    }
+
+    let mut bingo_boards = Vec::new();
+    let mut current_board = [[0; 5]; 5];
+    let mut board_row = 0;
+
+    let readings = readings.iter();
+    for (i, reading) in readings.enumerate() {        
+        // skip the bingo readings and first whitespace
+        if i < 2 {
+            continue
+        }
+
+        match reading.as_str() {
+            "" => {
+                // blank line, store and clear the bingo board
+                bingo_boards.push(current_board);
+                current_board = [[0; 5]; 5];
+                board_row = 0;
+            }
+            _ => {
+                // any other case, time to parse lines!
+                let bingo_line = reading.split_whitespace();
+
+                for (j, number) in bingo_line.enumerate() {
+                    current_board[board_row][j] = number
+                        .trim()
+                        .parse()
+                        .expect("Something went wrong parsing the number in row");
+                }
+                board_row += 1;
+            }
+        }
+    }    
+
+    // last board is still resident in current_board, so push to the array
+    bingo_boards.push(current_board);
+
+    // we have our boards, now we need to do scoring and i don't see not to use a
+    // bunch of loops again
+    let number_of_boards = bingo_boards.len();
+    let mut win_vector = vec![0 as usize; number_of_boards];
+    let mut current_board = 0;
+    for i in 0..bingo_nums.len() {
+        let curr_bingo_num = &bingo_nums[i];
+        for board in bingo_boards.iter_mut() {
+            for row in board.iter_mut() {
+                for number in row.iter_mut() {
+                    if number == curr_bingo_num {
+                        *number = -1;
+                    }
+                }
+            }
+            let (victory, score) = score_board(board);
+            if victory {
+                win_vector[current_board] = 1;
+                let won_boards: usize = win_vector.iter().sum();
+                if number_of_boards - won_boards == 0 {
+                    return score * curr_bingo_num
+                }
+            }
+            current_board += 1
+        }
+        current_board = 0;
+    }
+    return 0
+}
+
 // like a lot of other languages rust starts execution from main()
 fn main() {
     // hello
@@ -394,5 +611,16 @@ fn main() {
     let (o2, co2) = get_o2_co2(&readings);
     println!("Multiple of o2 and co2 are {}", o2 * co2);
     // day 3 stop
+
+    // day 4 start
+    println!("Advent of Code 2021 Day 4");
+    let path = "./data/day4.txt";
+    let readings = read_txt_strings(path).expect("Something went wrong with my file parsing");
+
+    let bingo_score = get_bingo_score(&readings);
+    println!("Bingo score is {}", bingo_score);
+
+    let last_bingo_score = get_bingo_score_last(&readings);
+    println!("Last winning bingo score is {}", last_bingo_score);
 
 }
