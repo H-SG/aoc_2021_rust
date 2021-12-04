@@ -22,7 +22,7 @@ fn read_txt_ints(path: &str) -> Result<Vec<i32>, Error> {
 
     // oh boy, just like python!
     for line in br.lines() {
-        // define our line from the result, because io is always a risk for errors
+        // define our line from the result because io is always a risk for errors
         // we do our '?' operator again to handle it, or not handle idk
         let line = line?;
 
@@ -355,8 +355,47 @@ fn get_o2_co2(readings: &[String]) -> (i32, i32) {
     return (o2, co2)
 }
 
-// day 4 part 1
-fn get_bingo_score(readings: &[String]) -> i32 {
+// day 4 let's make a bingo scoring function
+fn score_board(board: &[[i32; 5]; 5]) -> (bool, i32) {
+    let mut col_completed = false;
+
+    // making a function like this is a real "i know kung fu moment"
+    let row_completed = board
+        .iter()
+        // i wonder if there is a nice way if having this nested iter
+        .map(|row| row.iter().all(|&num| num == -1))
+        .any(|row| row);
+
+    // doing for the columns is not yet within my reach though, i am sure i could
+    // transpose it somewhat, but i'm happy enought with this as is
+    for i in 0..5 {
+        // we need to break out of this loop in case we accidentally set false on
+        // a prior true
+        if col_completed {
+            break;
+        }
+
+        col_completed = board
+            .iter()
+            .map(|row| row[i])
+            .all(|num| num == -1);
+    }
+
+    // now if we have completed rows or cols let's get the score back
+    if row_completed | col_completed {
+        let score_sum: i32 = board
+                .iter()
+                .flatten()
+                .filter(|number| number.is_positive())
+                .sum();
+        return (true, score_sum)
+    } else {
+        return (false, 0)
+    }
+}
+
+// day 4 let's make a function to parse the bingo boards and numbers
+fn get_bingo_boards(readings: &[String]) -> (Vec<i32>, Vec<[[i32; 5]; 5]>) {
     // okay so readings are unparsed in the strings, first line are bingo numbers
     // which will be read out in groups of 5 to be evaluated on the bingo boards
     let bingo_nums: Vec<i32> = readings[0]
@@ -364,53 +403,22 @@ fn get_bingo_score(readings: &[String]) -> i32 {
         .map(|s| s.parse().expect("Something went wrong parsing the bingo_nums"))
         .collect();
 
-    // let's make a bingo scoring function
-    fn score_board(board: &[[i32; 5]; 5]) -> (bool, i32) {
-        let mut victory = false;
-        let mut score_sum = 0;
-
-        // check if any rows or columns are completed
-        for i in 0..5 {
-            // row check
-            if board[i].iter().all(|&num| num == -1) {
-                victory = true;
-            }
-
-            // column check, a bit harder, being lazy about array building here
-            let column: Vec<i32> = board
-                .iter()
-                .map(|row| row[i])
-                .collect();
-            if column.iter().all(|&num| num == -1) {
-                victory = true;
-            }
-
-            if victory {
-                for row in board {
-                    for number in row {
-                        if number != &-1 {
-                            score_sum += number;
-                        }
-                    }
-                }
-                break;
-            }
-        }
-
-        return (victory, score_sum)
-    }
-
-    let mut bingo_boards = Vec::new();
-    let mut current_board = [[0; 5]; 5];
-    let mut board_row = 0;
-
-    let readings = readings.iter();
-    for (i, reading) in readings.enumerate() {        
+        let mut bingo_boards = Vec::new();
+        let mut current_board = [[0; 5]; 5];
+        let mut board_row = 0;
+    
+    // next we parse the bingo boards into a vector, right now this is assuming a
+    // fixed bingo board of 5x5 and then storing it in a 5x5 2d array, storing it
+    // as a straight vector 25 in length (or arbitrary square number) would probs
+    // reduce looping and make some of the expressions easier, but it's very nice
+    // to look at the array in the debugger and actually see your bingo board
+    for (i, reading) in readings.iter().enumerate() {        
         // skip the bingo readings and first whitespace
         if i < 2 {
-            continue
+            continue;
         }
 
+        // pattern matching ❤
         match reading.as_str() {
             "" => {
                 // blank line, store and clear the bingo board
@@ -420,9 +428,7 @@ fn get_bingo_score(readings: &[String]) -> i32 {
             }
             _ => {
                 // any other case, time to parse lines!
-                let bingo_line = reading.split_whitespace();
-
-                for (j, number) in bingo_line.enumerate() {
+                for (j, number) in reading.split_whitespace().enumerate() {
                     current_board[board_row][j] = number
                         .trim()
                         .parse()
@@ -433,141 +439,77 @@ fn get_bingo_score(readings: &[String]) -> i32 {
         }
     }    
 
-    // last board is still resident in current_board, so push to the array
+    // last board is still resident in current_board, so push to the array before
+    // returning the results
     bingo_boards.push(current_board);
-
-    // we have our boards, now we need to do scoring and i don't see not to use a
-    // bunch of loops again
-    for i in 0..bingo_nums.len() {
-        let curr_bingo_num = &bingo_nums[i];
-        for board in bingo_boards.iter_mut() {
-            for row in board.iter_mut() {
-                for number in row.iter_mut() {
-                    if number == curr_bingo_num {
-                        *number = -1;
-                    }
-                }
-            }
-        }
-        // let's check if any boards have won
-        for board in &bingo_boards {
-            let (victory, score) = score_board(board);
-            if victory {
-                return score * curr_bingo_num
-            }
-        }        
-    }
-
-    return 0
+    return(bingo_nums, bingo_boards)
 }
 
 // day 4 part 1
-fn get_bingo_score_last(readings: &[String]) -> i32 {
-    // okay so readings are unparsed in the strings, first line are bingo numbers
-    // which will be read out in groups of 5 to be evaluated on the bingo boards
-    let bingo_nums: Vec<i32> = readings[0]
-        .split(',')
-        .map(|s| s.parse().expect("Something went wrong parsing the bingo_nums"))
-        .collect();
+fn get_bingo_score(readings: &[String]) -> i32 {
+    // let's parse the bingo board and number data
+    let (bingo_nums, mut bingo_boards) = get_bingo_boards(readings);    
 
-    // let's make a bingo scoring function
-    fn score_board(board: &[[i32; 5]; 5]) -> (bool, i32) {
-        let mut victory = false;
-        let mut score_sum = 0;
+    // we have our boards, now we need to do scoring and i don't how to not use a
+    // loop here again, i've been vaguely told that 
+    for bingo_num in bingo_nums {
+        for board in bingo_boards.iter_mut() {
+            // nice
+            board.iter_mut()
+                // now this is nice for dealing with multidimensional arrays
+                .flatten()
+                // just keep looking at values that pass this condition
+                .filter(|num| **num == bingo_num)
+                // assinging -1 where bingo_num is found, something that does not
+                // occur naturally in the bingo boards and still is an int
+                .for_each(|num| *num = -1);
 
-        // check if any rows or columns are completed
-        for i in 0..5 {
-            // row check
-            if board[i].iter().all(|&num| num == -1) {
-                victory = true;
-            }
-
-            // column check, a bit harder, being lazy about array building here
-            let column: Vec<i32> = board
-                .iter()
-                .map(|row| row[i])
-                .collect();
-            if column.iter().all(|&num| num == -1) {
-                victory = true;
-            }
-
+            // check if we have any winning hands
+            let (victory, score) = score_board(board);
             if victory {
-                for row in board {
-                    for number in row {
-                        if number != &-1 {
-                            score_sum += number;
-                        }
-                    }
-                }
-                break;
+                return score * bingo_num
             }
         }
-
-        return (victory, score_sum)
     }
+    // better would be to use Ok() above and Err() here since i should always get
+    // some score, unless the puzzle was not solved
+    return 0
+}
 
-    let mut bingo_boards = Vec::new();
-    let mut current_board = [[0; 5]; 5];
-    let mut board_row = 0;
-
-    let readings = readings.iter();
-    for (i, reading) in readings.enumerate() {        
-        // skip the bingo readings and first whitespace
-        if i < 2 {
-            continue
-        }
-
-        match reading.as_str() {
-            "" => {
-                // blank line, store and clear the bingo board
-                bingo_boards.push(current_board);
-                current_board = [[0; 5]; 5];
-                board_row = 0;
-            }
-            _ => {
-                // any other case, time to parse lines!
-                let bingo_line = reading.split_whitespace();
-
-                for (j, number) in bingo_line.enumerate() {
-                    current_board[board_row][j] = number
-                        .trim()
-                        .parse()
-                        .expect("Something went wrong parsing the number in row");
-                }
-                board_row += 1;
-            }
-        }
-    }    
-
-    // last board is still resident in current_board, so push to the array
-    bingo_boards.push(current_board);
+// day 4 part 2
+fn get_bingo_score_last(readings: &[String]) -> i32 {
+    // let's parse the bingo board and number data
+    let (bingo_nums, mut bingo_boards) = get_bingo_boards(readings);
 
     // we have our boards, now we need to do scoring and i don't see not to use a
     // bunch of loops again
     let number_of_boards = bingo_boards.len();
     let mut win_vector = vec![0 as usize; number_of_boards];
-    let mut current_board = 0;
-    for i in 0..bingo_nums.len() {
-        let curr_bingo_num = &bingo_nums[i];
-        for board in bingo_boards.iter_mut() {
-            for row in board.iter_mut() {
-                for number in row.iter_mut() {
-                    if number == curr_bingo_num {
-                        *number = -1;
-                    }
-                }
-            }
+    for bingo_num in bingo_nums {
+        for (i, board) in bingo_boards.iter_mut().enumerate() {
+            // nice again
+            board.iter_mut()
+                .flatten()
+                .filter(|num| **num == bingo_num)
+                .for_each(|num| *num = -1);
+
+            // again we check for success, but in this case we're looking for the
+            // last winning board
             let (victory, score) = score_board(board);
             if victory {
-                win_vector[current_board] = 1;
-                let won_boards: usize = win_vector.iter().sum();
-                if number_of_boards - won_boards == 0 {
-                    return score * curr_bingo_num
+                // we need to keep track of which of the boards have been won, so 
+                // we no longer count them as further wins in the loop
+                win_vector[i] = 1;
+                let won_board_count: usize = win_vector.iter().sum();
+                // technically, this will fail if end up with boards that are not
+                // winning after the input number are exhausted, but i think that
+                // would not be case here and would make things a lot harder, but
+                // recursion could be the answer then ;)
+                if number_of_boards - won_board_count == 0 {
+                    return score * bingo_num
                 }
             }
-            current_board += 1
         }
-        current_board = 0;
     }
     return 0
 }

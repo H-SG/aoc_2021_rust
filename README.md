@@ -29,3 +29,10 @@ Ho boy! Binary operations are something I've never really done a lot of, and in 
 Regardless, the beast is slain even if some parts of it feel truly hideous to me. I'm afraid to look at some other solutions...
 
 Once again I've neglected to commit some bizarre intermediate solutions, which I regret now.
+
+### Day 4
+Man, I feel like I made a major breakthrough today with some of the `iter` comprehension. While my initial solution was strongly dependant on nested loops, the final version is starting to feel like something that might be idiomatic rust. I've been purposely avoiding looking at other rust AOC solutions to try and use only the documentation and some other online resources to not taint my nascent dialect too much. I'm not quite sure yet I can build these types of chained commands without doing the loops first, but understanding is dawning and friction is falling.
+
+I will likely refractor out the solutions for the various days soonish as the amount of code is getting a bit silly to navigate. This will also present a nice opportunity to see how importing from other rust files works with some of the functions that are starting to become common.
+
+Lastly, I also need to give some attention to the debugger in VS Code. I really would like to get expressions working while stepping through the code. Maybe it's just something that rust doesn't do and I've been poisoned irrevocably by Python.
