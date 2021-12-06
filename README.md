@@ -36,3 +36,11 @@ Man, I feel like I made a major breakthrough today with some of the `iter` compr
 I will likely refractor out the solutions for the various days soonish as the amount of code is getting a bit silly to navigate. This will also present a nice opportunity to see how importing from other rust files works with some of the functions that are starting to become common.
 
 Lastly, I also need to give some attention to the debugger in VS Code. I really would like to get expressions working while stepping through the code. Maybe it's just something that rust doesn't do and I've been poisoned irrevocably by Python.
+
+### Day 5
+This will live on in infamy of me massively overcomplicating it. I built an engine that will recursively check each vector, assuming that they aren't discrete, but continuous for crossings or collinearity (and if intersecting while collinear then the intersecting distance). I will not be sharing that monstrosity, we're done here.
+
+Aside, I've decided to not split the solutions up into separate instances, because it's nice to be able to scroll back and see what you've done before
+
+### Day 6
+This was super easy as long as you live on geological time scales. The naive solution gave way to something more sensible and very fast. Madames et Monsieurs, `rotate_left()`.

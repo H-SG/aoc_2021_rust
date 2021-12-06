@@ -1,6 +1,7 @@
 // crates, which have to be specified in Cargo.toml unless they are common
 use std::fs::File;
 use std::io::{Error, BufReader, BufRead, ErrorKind};
+use std::cmp::{min, max};
 
 // okay, let's create a function, we are passing a path as an immutable reference 
 // the function will return a result (for how rust handles errors) which contains 
@@ -514,6 +515,141 @@ fn get_bingo_score_last(readings: &[String]) -> i32 {
     return 0
 }
 
+// day 5 parsing coordinate pairs
+fn parse_coordinate_pairs(readings: &[String]) -> Vec<Vec<i32>>{
+    let coordinate_pairs = readings
+        .iter()
+        .map({
+            |reading| reading
+                .replace("->", ",")
+                .split(',')
+                .map({
+                    |s| s
+                        .trim()
+                        .parse()
+                        .unwrap()
+                })
+                .collect()
+
+        })
+        .collect();
+
+    return coordinate_pairs
+}
+
+// day 5 part 1 and 2
+fn get_pair_crossings(vectors: &Vec<Vec<i32>>) -> i32 {
+    let max_dimension = vectors
+    .iter()
+    .flatten()
+    .max()
+    .unwrap() + 1;
+    
+    let mut vent_map = vec![vec![0; max_dimension as usize]; max_dimension as usize];
+
+    for vector in vectors {
+        // check if vector is vertical, horizontal, or diagonal
+        if vector[0] == vector[2] {
+            // vector is vertical
+            let x = vector[0];
+            for y in min(vector[1], vector[3])..(max(vector[1], vector[3]) + 1) {
+                vent_map[y as usize][x as usize] += 1;
+            }
+        } else if vector[1] == vector[3]{
+            // vector is horizontal
+            let y = vector[1];
+            for x in min(vector[0], vector[2])..(max(vector[0], vector[2]) + 1) {
+                vent_map[y as usize][x as usize] += 1;
+            }     
+        } else {
+            // vector is diagonal
+            // need to check if going down left or down right
+            let dy = vector[3] - vector[1];
+            let dx = vector[2] - vector[0];
+            let magnitude = dy.abs(); // since we are dealing with 45 degree vectors
+
+            if dy.is_positive() == dx.is_positive() {
+                let x = min(vector[0], vector[2]);
+                let y = min(vector[1], vector[3]);
+                for m in 0..(magnitude + 1) {
+                    vent_map[(y + m) as usize][(x + m) as usize] += 1;
+                }
+            } else {
+                let x = min(vector[0], vector[2]);
+                let y = max(vector[1], vector[3]);
+
+                for m in 0..(magnitude + 1) {
+                    vent_map[(y - m) as usize][(x + m) as usize] += 1;
+                }
+            }
+        }
+    }
+
+    let crossings = vent_map
+        .iter()
+        .flatten()
+        .filter(|vent| **vent >= 2)
+        .count();
+    return crossings as i32
+}
+
+// day 6 part 1 - deprecated because slow
+fn get_fish_population(fish_ages: &[String], days: i32) -> i32 {
+    let mut fish: Vec<i32> = fish_ages[0]
+        .split(',')
+        .map(|timer| timer.trim().parse().unwrap())
+        .collect();
+
+    // this will totally not be slow, right?
+    for i in 0..days {
+        // check if any fish time 0
+        let ready_fish = fish
+            .iter()
+            .filter(|timer| **timer==0)
+            .count();
+
+        // add new fish
+        for _ in 0..ready_fish {
+            fish.push(9);
+        }
+
+        // subtract all timers
+        fish.iter_mut().for_each(|timer| *timer -= 1);
+        fish.iter_mut().filter(|timer| **timer == -1).for_each(|timer| *timer = 6);
+    }
+
+    return fish.len() as i32
+}
+
+// day 6 part 2
+fn get_fish_population_faster(fish_ages: &[String], days: i32) -> i64 {
+    // get our starting fish
+    let fish: Vec<i64> = fish_ages[0]
+        .split(',')
+        // i feel like i'm getting really cocky about error handling, oh well
+        .map(|timer| timer.trim().parse().unwrap())
+        .collect();
+
+    // let's make a vector that keeps track of how many fish are at what age, the
+    // range of valid ages for fish are 0 to 8
+    let mut fish_age_counts = vec![0; 9];
+
+    // set the initial fish population age groups, not sure if i could do this in
+    // an iter? can i modify another array like that then?
+    for f in fish {
+        fish_age_counts[f as usize] += 1;
+    }
+
+
+    for _ in 0..days {
+        let restarting_fish = fish_age_counts[0];
+        fish_age_counts.rotate_left(1);
+        fish_age_counts[6] += restarting_fish;
+    }
+
+    return fish_age_counts.iter().sum()
+}
+
 // like a lot of other languages rust starts execution from main()
 fn main() {
     // hello
@@ -564,5 +700,36 @@ fn main() {
 
     let last_bingo_score = get_bingo_score_last(&readings);
     println!("Last winning bingo score is {}", last_bingo_score);
+    // day 4 stop
+
+    // day 5 start
+    println!("Advent of Code 2021 Day 5");
+    let path = "./data/day5.txt";
+    let readings = read_txt_strings(&path).expect("Something went wrong reading input data");
+    let coordinate_pairs = parse_coordinate_pairs(&readings);
+
+    // for part one only look at the horizontal + vertical vectors
+    let reduced_coordinate_pairs = coordinate_pairs
+        .iter()
+        .filter(|pair| (pair[0] == pair[2]) | (pair[1] == pair[3]))
+        .map(|pair| pair.to_vec())
+        .collect::<Vec<Vec<i32>>>();
+
+    let crossings = get_pair_crossings(&reduced_coordinate_pairs);
+    println!("There are {} h+v vent crossings", crossings);
+
+    let crossings = get_pair_crossings(&coordinate_pairs);
+    println!("There are {} h+v+d vent crossings", crossings);
+    // day 5 end
+
+    // day 6 start
+    println!("Advent of Code 2021 Day 6");
+    let path = "./data/day6.txt";
+    let fish_times = read_txt_strings(&path).expect("Something went wrong reading input data");
+    let num_fish = get_fish_population_faster(&fish_times, 80);
+    println!("There are {} fish after 80 days", num_fish);
+
+    let num_fish = get_fish_population_faster(&fish_times, 256);
+    println!("There are {} fish after 256 days", num_fish);
 
 }
