@@ -691,7 +691,7 @@ fn get_crab_fuel_cost_exp(crab_pos: &[String]) -> i32 {
         .map(|timer| timer.trim().parse().unwrap())
         .collect();
 
-    // i don't think our media trick is going to work here, but the mean position
+    // i don't think our median trick is going to work here but the mean position
     // should be a good starting point to do some eggregious gradient descent, it
     // is possible i'm just rounding wrong since i seem to always be off by one
     let mean_pos = ((positions.iter().sum::<i32>() as f64) / (positions.len() as f64)).round() as i32;
