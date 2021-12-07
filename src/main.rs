@@ -594,32 +594,32 @@ fn get_pair_crossings(vectors: &Vec<Vec<i32>>) -> i32 {
 }
 
 // day 6 part 1 - deprecated because slow
-fn get_fish_population(fish_ages: &[String], days: i32) -> i32 {
-    let mut fish: Vec<i32> = fish_ages[0]
-        .split(',')
-        .map(|timer| timer.trim().parse().unwrap())
-        .collect();
+// fn get_fish_population(fish_ages: &[String], days: i32) -> i32 {
+//     let mut fish: Vec<i32> = fish_ages[0]
+//         .split(',')
+//         .map(|timer| timer.trim().parse().unwrap())
+//         .collect();
 
-    // this will totally not be slow, right?
-    for i in 0..days {
-        // check if any fish time 0
-        let ready_fish = fish
-            .iter()
-            .filter(|timer| **timer==0)
-            .count();
+//     // this will totally not be slow, right?
+//     for _ in 0..days {
+//         // check if any fish time 0
+//         let ready_fish = fish
+//             .iter()
+//             .filter(|timer| **timer==0)
+//             .count();
 
-        // add new fish
-        for _ in 0..ready_fish {
-            fish.push(9);
-        }
+//         // add new fish
+//         for _ in 0..ready_fish {
+//             fish.push(9);
+//         }
 
-        // subtract all timers
-        fish.iter_mut().for_each(|timer| *timer -= 1);
-        fish.iter_mut().filter(|timer| **timer == -1).for_each(|timer| *timer = 6);
-    }
+//         // subtract all timers
+//         fish.iter_mut().for_each(|timer| *timer -= 1);
+//         fish.iter_mut().filter(|timer| **timer == -1).for_each(|timer| *timer = 6);
+//     }
 
-    return fish.len() as i32
-}
+//     return fish.len() as i32
+// }
 
 // day 6 part 2
 fn get_fish_population_faster(fish_ages: &[String], days: i32) -> i64 {
@@ -630,9 +630,9 @@ fn get_fish_population_faster(fish_ages: &[String], days: i32) -> i64 {
         .map(|timer| timer.trim().parse().unwrap())
         .collect();
 
-    // let's make a vector that keeps track of how many fish are at what age, the
+    // let's make an array that keeps track of how many fish are at what age, the
     // range of valid ages for fish are 0 to 8
-    let mut fish_age_counts = vec![0; 9];
+    let mut fish_age_counts = [0; 9];
 
     // set the initial fish population age groups, not sure if i could do this in
     // an iter? can i modify another array like that then?
@@ -642,12 +642,100 @@ fn get_fish_population_faster(fish_ages: &[String], days: i32) -> i64 {
 
 
     for _ in 0..days {
-        let restarting_fish = fish_age_counts[0];
         fish_age_counts.rotate_left(1);
-        fish_age_counts[6] += restarting_fish;
+        fish_age_counts[6] += fish_age_counts[8];
     }
 
     return fish_age_counts.iter().sum()
+}
+
+// day 7 i need a median function
+fn median(numbers: &mut Vec<i32>) -> f64 {
+    let length = numbers.len();
+    numbers.sort_unstable();
+
+    if length % 2 == 0 {
+        let left = numbers[(length / 2) - 1];
+        let right = numbers[length / 2];
+
+        return (left as f64 + right as f64) / 2.0
+    } else {
+        return numbers[length / 2] as f64
+    }
+}
+
+
+// day 7 part 1
+fn get_crab_fuel_cost(crab_pos: &[String]) -> f64 {
+    // get our positions
+    let mut positions: Vec<i32> = crab_pos[0]
+        .split(',')
+        .map(|timer| timer.trim().parse().unwrap())
+        .collect();
+
+    let median_pos = median(&mut positions);
+
+    let fuel_use: f64 = positions
+        .iter_mut()
+        .map(|s| ((*s as f64) - median_pos).abs())
+        .sum();
+
+    return fuel_use
+}
+
+// day 7 part 2
+fn get_crab_fuel_cost_exp(crab_pos: &[String]) -> i32 {
+    // get our positions
+    let positions: Vec<i32> = crab_pos[0]
+        .split(',')
+        .map(|timer| timer.trim().parse().unwrap())
+        .collect();
+
+    // i don't think our media trick is going to work here, but the mean position
+    // should be a good starting point to do some eggregious gradient descent, it
+    // is possible i'm just rounding wrong since i seem to always be off by one
+    let mean_pos = ((positions.iter().sum::<i32>() as f64) / (positions.len() as f64)).round() as i32;
+
+    let mut curr_minimum: i32 = positions
+        .iter()
+        // first time using copied, as far as i can see, this returns a shiny new
+        // vector to do work on instead of modifying the original, useful
+        .copied()
+        .map(|s| (s - mean_pos).abs())
+        .map(|s| (s*(s+1))/2)
+        .sum();
+
+    // okay, now we try to descend the curve
+    let mut at_minima = false;
+    let mut direction = 1;
+    let mut direction_changes = 0;
+    let mut offset = 1;
+
+    // this is probably overkill, i'm sure i am rounding the mean a bit wrong
+    while at_minima == false {
+        let fuel_use: i32 = positions
+            .iter()
+            .copied()
+            .map(|s| (s - (mean_pos + offset)).abs())
+            .map(|s| (s*(s+1))/2)
+            .sum();
+
+        if fuel_use > curr_minimum {
+            // change direction
+            direction *= -1;
+            direction_changes += 1;
+        } else if fuel_use < curr_minimum {
+            // going down the gradient, all is well
+            curr_minimum = fuel_use;
+        } // no need for else, if use is equal
+        offset += direction;
+
+        if direction_changes > 1 {
+            // if we change direction more than twice we must be at a minima
+            at_minima = true;
+        }            
+    }
+    return curr_minimum
 }
 
 // like a lot of other languages rust starts execution from main()
@@ -657,50 +745,38 @@ fn main() {
 
     // day 1 start
     let path = "./data/day1.txt";
-    let readings = read_txt_ints(path).expect("Something went wrong with my file parsing");    
-
+    let readings = read_txt_ints(path).expect("Something went wrong with my file parsing");
     let first_sum = get_sum_positive_diffs(&readings, 1);
     println!("First sum is {}", first_sum);
-
     let second_sum = get_sum_positive_diffs(&readings, 3);
     println!("Second sum is {}", second_sum);
-    // day 1 end
 
     // day 2 start
     println!("Advent of Code 2021 Day 2");
     let path = "./data/day2.txt";
     let readings = read_txt_pairs(path).expect("Something went wrong with my file parsing");
-
     let first_calc = get_depth_distance_multiple(&readings);
     println!("Multiple of final depth and position is {}", first_calc);
-
     let second_calc = get_depth_distance_aim_multiple(&readings);
     println!("Multiple of aimed depth and position is {}", second_calc);
-    // day 2 stop
 
     // day 3 start
     println!("Advent of Code 2021 Day 3");
     let path = "./data/day3.txt";    
     let readings = read_txt_strings(path).expect("Something went wrong with my file parsing");
-
     let (gamma, epsilon) = get_gamma_and_epsilon(&readings);
     println!("Multiple of gamma and epsilon are {}", gamma * epsilon);
-
     let (o2, co2) = get_o2_co2(&readings);
     println!("Multiple of o2 and co2 are {}", o2 * co2);
-    // day 3 stop
 
     // day 4 start
     println!("Advent of Code 2021 Day 4");
     let path = "./data/day4.txt";
     let readings = read_txt_strings(path).expect("Something went wrong with my file parsing");
-
     let bingo_score = get_bingo_score(&readings);
     println!("Bingo score is {}", bingo_score);
-
     let last_bingo_score = get_bingo_score_last(&readings);
     println!("Last winning bingo score is {}", last_bingo_score);
-    // day 4 stop
 
     // day 5 start
     println!("Advent of Code 2021 Day 5");
@@ -717,10 +793,8 @@ fn main() {
 
     let crossings = get_pair_crossings(&reduced_coordinate_pairs);
     println!("There are {} h+v vent crossings", crossings);
-
     let crossings = get_pair_crossings(&coordinate_pairs);
     println!("There are {} h+v+d vent crossings", crossings);
-    // day 5 end
 
     // day 6 start
     println!("Advent of Code 2021 Day 6");
@@ -728,8 +802,15 @@ fn main() {
     let fish_times = read_txt_strings(&path).expect("Something went wrong reading input data");
     let num_fish = get_fish_population_faster(&fish_times, 80);
     println!("There are {} fish after 80 days", num_fish);
-
     let num_fish = get_fish_population_faster(&fish_times, 256);
     println!("There are {} fish after 256 days", num_fish);
 
+    // day 7 start
+    println!("Advent of Code 2021 Day 7");
+    let path = "./data/day7.txt";
+    let crab_pos = read_txt_strings(&path).expect("Something went wrong reading input data");
+    let crab_fuel_cost = get_crab_fuel_cost(&crab_pos);
+    println!("Crab fuel costs are {}", crab_fuel_cost);
+    let crab_fuel_cost = get_crab_fuel_cost_exp(&crab_pos);
+    println!("Crab exponential fuel costs are {}", crab_fuel_cost);
 }

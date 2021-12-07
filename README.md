@@ -44,3 +44,8 @@ Aside, I've decided to not split the solutions up into separate instances, becau
 
 ### Day 6
 This was super easy as long as you live on geological time scales. The naive solution gave way to something more sensible and very fast. Madames et Monsieurs, `rotate_left()`.
+
+### Day 7
+Another reasonably quick one, it seemed intuitive that we needed to move the crabs to the median, and then mean positions. I'm not sure if my rounding was off, but I went overboard with the second part to find the minimum fuel use. New function I learned today was `.copied()` which you can call on an `.iter()` to create a new copy on which you can do changes instead of borrowing the original.
+
+One thing which has been annoying about rust is the relative instability of the language syntax, examples from just a few years ago are quite different and function in ways not similar to what we have now in the language. Reminds me of the dark days of python2 -> python3
