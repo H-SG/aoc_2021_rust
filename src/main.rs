@@ -2,6 +2,8 @@
 use std::fs::File;
 use std::io::{Error, BufReader, BufRead, ErrorKind};
 use std::cmp::{min, max};
+use std::collections::HashMap;
+use itertools::Itertools;
 
 // okay, let's create a function, we are passing a path as an immutable reference 
 // the function will return a result (for how rust handles errors) which contains 
@@ -738,6 +740,176 @@ fn get_crab_fuel_cost_exp(crab_pos: &[String]) -> i32 {
     return curr_minimum
 }
 
+// day 8 part 1
+fn get_sub_display_number_count(sub_num: &[String]) -> i32 {
+    // get digits
+    let output_values: Vec<String> = sub_num
+        .iter()
+        .map(|entry| entry.split('|').map(|sub_entry| sub_entry.to_string()).collect::<Vec<String>>())
+        .map(|entry| entry[1].to_string())
+        .collect();
+
+    // let output_values = sub_num[0]
+    //     .split("|")
+    //     .map(|entry| entry.to_string())
+    //     .collect::<Vec<String>>();
+
+    // let last_val = &output_values[1];
+
+    let mut count_1_4_8_7 = 0;
+
+    for digit_group in output_values {
+        for digit in digit_group.split_whitespace().map(|s| s.trim().to_string()).collect::<Vec<String>>() {
+            match digit.len() {
+                2 => count_1_4_8_7 += 1,
+                3 => count_1_4_8_7 += 1,
+                4 => count_1_4_8_7 += 1,
+                7 => count_1_4_8_7 += 1,
+                _ => ()
+
+            }
+        }
+    }
+
+    return count_1_4_8_7
+}
+
+// day 8 part 2
+fn get_sub_display_number_values_and_sums(sub_num: &[String]) -> i32 {
+    let mut final_output: i32 = 0;
+    // get digits
+    let all_digits: Vec<Vec<String>> = sub_num
+        .iter()
+        .map(|entry| entry
+                        .replace("|", "")
+                        .split_whitespace()
+                        .map(|sub_entry| sub_entry
+                                            .trim()
+                                            .to_string())
+                        .collect::<Vec<String>>())
+        .collect();
+
+    let output_digits: Vec<String> = sub_num
+        .iter()
+        .map(|entry| entry.split('|').map(|sub_entry| sub_entry.to_string()).collect::<Vec<String>>())
+        .map(|entry| entry[1].to_string())
+        .collect();
+
+    let mut digit_maps = Vec::new();
+
+    // have to get this starting list of values as they are used as comparitors
+    for digit_group in &all_digits {
+        let mut digit_map = HashMap::new();
+        for digit in digit_group {
+            match digit.len() {
+                2 => {
+                    if !digit_map.contains_key(&1) {
+                        digit_map.insert(1, digit.chars().sorted().collect::<String>());
+                    }
+                },
+                3 => {
+                    if !digit_map.contains_key(&7) {
+                        digit_map.insert(7, digit.chars().sorted().collect::<String>());
+                    }
+                },
+                4 => {
+                    if !digit_map.contains_key(&4) {
+                        digit_map.insert(4, digit.chars().sorted().collect::<String>());
+                    }
+                },
+                7 => {
+                    if !digit_map.contains_key(&8) {
+                        digit_map.insert(8, digit.chars().sorted().collect::<String>());
+                    }
+                },
+                _ => ()
+
+            }
+        }
+        digit_maps.push(digit_map);
+    }
+
+    // get all the other digits for each instance
+    for (i, digit_map) in digit_maps.iter_mut().enumerate() {
+        // get char for top bar of segement, char in 7 which is not in 1
+        let one_map = digit_map[&1].to_string();
+        let seven_map = digit_map[&7].to_string();
+        let four_map = digit_map[&4].to_string();
+        let mut top_char = '\0';
+
+        for digit_char in seven_map.chars() {
+            if !one_map.contains(digit_char) {
+                top_char = digit_char;
+                break;
+
+            }
+        }
+
+        // next we can find all the rest!
+        let mut false_nine_map = digit_map[&4].to_string() ;
+        false_nine_map.push(top_char);
+
+        for digit in &all_digits[i] {
+            match digit.len() {
+                6 => {
+                    // check if all values for nine are there
+                    if false_nine_map.chars().all(|c| digit.contains(c)) {
+                        if !digit_map.contains_key(&9) {
+                            digit_map.insert(9, digit.chars().sorted().collect::<String>());
+                        }
+                    // check if all values for 0 are there
+                    } else if one_map.chars().all(|c| digit.contains(c)) {
+                        if !digit_map.contains_key(&0) {
+                            digit_map.insert(0, digit.chars().sorted().collect::<String>());
+                        }
+                    // otherwise must be 6
+                    } else {
+                        if !digit_map.contains_key(&6) {
+                            digit_map.insert(6, digit.chars().sorted().collect::<String>());
+                        }
+                    }
+                },
+                5 => {
+                    // check if all values for three are there
+                    if one_map.chars().all(|c| digit.contains(c)) {
+                        if !digit_map.contains_key(&3) {
+                            digit_map.insert(3, digit.chars().sorted().collect::<String>());
+                        }
+                    // 5 will have three segments in common with 4, 2 only two
+                    } else if four_map.chars().filter(|&c| digit.contains(c)).count() == 3 {
+                        if !digit_map.contains_key(&5) {
+                            digit_map.insert(5, digit.chars().sorted().collect::<String>());
+                        }
+                    // 2 is all that is left!
+                    } else {
+                        if !digit_map.contains_key(&2) {
+                            digit_map.insert(2, digit.chars().sorted().collect::<String>());
+                        }
+                    }
+                },
+                _ => ()
+            }
+        }
+        // we've filled out our hashmap for this line, now we need to reverse it
+        let mut digit_map_reversed = HashMap::new();
+        for (digit, strings) in digit_map {
+            digit_map_reversed.insert(strings, *digit);
+        }
+
+        // get the current output
+        let output: i32 = output_digits[i]
+            .split_whitespace()
+            .map(|s| s.trim().to_string().chars().sorted().collect::<String>())
+            .map(|s| digit_map_reversed[&s].to_string())
+            .collect::<String>()
+            .parse()
+            .unwrap();
+
+        final_output += output;
+    }
+    return final_output
+}
+
 // like a lot of other languages rust starts execution from main()
 fn main() {
     // hello
@@ -813,4 +985,13 @@ fn main() {
     println!("Crab fuel costs are {}", crab_fuel_cost);
     let crab_fuel_cost = get_crab_fuel_cost_exp(&crab_pos);
     println!("Crab exponential fuel costs are {}", crab_fuel_cost);
+
+    // day 8 start
+    println!("Advent of Code 2021 Day 8");
+    let path = "./data/day8.txt";
+    let sub_num = read_txt_strings(&path).expect("Something went wrong reading input data");
+    let sub_digit_count = get_sub_display_number_count(&sub_num);
+    println!("Number of 1, 4, 7, 8 digits are {}", sub_digit_count);
+    let sub_number_sum = get_sub_display_number_values_and_sums(&sub_num);
+    println!("Sum of outputs are {}", sub_number_sum);
 }

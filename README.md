@@ -49,3 +49,6 @@ This was super easy as long as you live on geological time scales. The naive sol
 Another reasonably quick one, it seemed intuitive that we needed to move the crabs to the median, and then mean positions. I'm not sure if my rounding was off, but I went overboard with the second part to find the minimum fuel use. New function I learned today was `.copied()` which you can call on an `.iter()` to create a new copy on which you can do changes instead of borrowing the original.
 
 One thing which has been annoying about rust is the relative instability of the language syntax, examples from just a few years ago are quite different and function in ways not similar to what we have now in the language. Reminds me of the dark days of python2 -> python3
+
+### Day 8
+I'll be honest, I'm not entirely sure how to not make this look nicer. Otherwise, our first crate is in the project! I was somewhat annoyed in that I had to restart VS Code entirely to make it stop giving linting errors about `.sorted()` not being a valid function on `.chars()`, but we got there in the end.
