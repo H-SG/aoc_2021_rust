@@ -52,3 +52,8 @@ One thing which has been annoying about rust is the relative instability of the 
 
 ### Day 8
 I'll be honest, I'm not entirely sure how to not make this look nicer. Otherwise, our first crate is in the project! I was somewhat annoyed in that I had to restart VS Code entirely to make it stop giving linting errors about `.sorted()` not being a valid function on `.chars()`, but we got there in the end.
+
+### Day 9
+Nothing too surprising here, but I did get a chance to use recursion! I initially planned to use a 2d array map, but it was easier to just keep track of the seafloor width and use offsets as needed. I do like the filters I build into the index offsets to make sure we are always in valid bounds.
+
+Did I mention I used recursion?

@@ -749,13 +749,6 @@ fn get_sub_display_number_count(sub_num: &[String]) -> i32 {
         .map(|entry| entry[1].to_string())
         .collect();
 
-    // let output_values = sub_num[0]
-    //     .split("|")
-    //     .map(|entry| entry.to_string())
-    //     .collect::<Vec<String>>();
-
-    // let last_val = &output_values[1];
-
     let mut count_1_4_8_7 = 0;
 
     for digit_group in output_values {
@@ -910,6 +903,131 @@ fn get_sub_display_number_values_and_sums(sub_num: &[String]) -> i32 {
     return final_output
 }
 
+// day 9 part 1
+fn get_seafloor_risk(seafloor_map: &[String]) -> i32 {
+    let seafloor_width = seafloor_map[0].len();
+    let mut risk_level = 0;
+
+    let seafloor_array: Vec<i32> = seafloor_map
+                                .iter()                                
+                                .map(|s| s.chars().map(|c| c.to_string().parse().unwrap()).collect::<Vec<i32>>())
+                                .flatten()
+                                .collect();
+
+    let total_length = seafloor_array.len();
+
+    let check_index_offsets = [-1, 1, -(seafloor_width as i32), seafloor_width as i32];
+
+    for (i, depth) in seafloor_array.iter().enumerate() {
+        let check_indices: Vec<i32> = check_index_offsets
+                                .iter()
+                                .map(|index| (i as i32) + index)
+                                // we don't want any indices before the start
+                                .filter(|index| index >= &0)
+                                // we don't want any indices after the end
+                                .filter(|index| index < &(total_length as i32))
+                                // if we are on the left edge, we don't want vals
+                                // one to the left of the current index
+                                .filter(|index| !((i % seafloor_width == 0) & (*index == i as i32 - 1)))
+                                // if we are on the right edge, we don't want one
+                                // to the right of the current index
+                                .filter(|index| !((i % seafloor_width == seafloor_width - 1) & (*index == i as i32 + 1)))
+                                .collect();
+
+        let is_deepest = check_indices
+                            .iter()
+                            .all(|depth_index| depth < &seafloor_array[*depth_index as usize]);
+        
+        if is_deepest {
+            risk_level += depth + 1;
+        }
+    }
+    
+    return risk_level
+}
+
+// day 9 function - recursion!
+fn check_basin_neighbours(basin_index: &usize, seafloor_array: &Vec<i32>, seafloor_width: &usize, total_length: &usize) -> Vec<i32> {
+    let check_index_offsets = [-1, 1, -(*seafloor_width as i32), *seafloor_width as i32];
+    let check_indices: Vec<i32> = check_index_offsets
+                                .iter()
+                                .map(|index| (*basin_index as i32) + index)
+                                // we don't want any indices before the start
+                                .filter(|index| index >= &0)
+                                // we don't want any indices after the end
+                                .filter(|index| index < &(*total_length as i32))
+                                // if we are on the left edge, we don't want vals
+                                // one to the left of the current index
+                                .filter(|index| !((basin_index % seafloor_width == 0) & (*index == *basin_index as i32 - 1)))
+                                // if we are on the right edge, we don't want one
+                                // to the right of the current index
+                                .filter(|index| !((basin_index % seafloor_width == seafloor_width - 1) & (*index == *basin_index as i32 + 1)))
+                                .collect();
+    let mut basin_indexes: Vec<i32> = Vec::new();
+    for check_index in check_indices {
+        if seafloor_array[check_index as usize] == 9 {
+            // basin does not include 9s
+            continue
+        } else {
+            // we need to check the value and it's neighbours
+            basin_indexes.push(check_index as i32);
+            if seafloor_array[check_index as usize] > seafloor_array[*basin_index] {
+                basin_indexes.extend(check_basin_neighbours(&(check_index as usize), seafloor_array, seafloor_width, total_length));
+            }
+        }
+    }
+    return basin_indexes.into_iter().unique().collect();
+}
+
+// day 9 part 2
+fn get_seafloor_basin_risk(seafloor_map: &[String]) -> i32 {
+    let seafloor_width = seafloor_map[0].len();
+
+    let seafloor_array: Vec<i32> = seafloor_map
+                                .iter()                                
+                                .map(|s| s.chars().map(|c| c.to_string().parse().unwrap()).collect::<Vec<i32>>())
+                                .flatten()
+                                .collect();
+
+    let total_length = seafloor_array.len();
+
+    let mut basin_sizes: Vec<i32> = Vec::new();
+
+    let check_index_offsets = [-1, 1, -(seafloor_width as i32), seafloor_width as i32];
+
+    
+
+    for (i, depth) in seafloor_array.iter().enumerate() {
+        let check_indices: Vec<i32> = check_index_offsets
+                                .iter()
+                                .map(|index| (i as i32) + index)
+                                // we don't want any indices before the start
+                                .filter(|index| index >= &0)
+                                // we don't want any indices after the end
+                                .filter(|index| index < &(total_length as i32))
+                                // if we are on the left edge, we don't want vals
+                                // one to the left of the current index
+                                .filter(|index| !((i % seafloor_width == 0) & (*index == i as i32 - 1)))
+                                // if we are on the right edge, we don't want one
+                                // to the right of the current index
+                                .filter(|index| !((i % seafloor_width == seafloor_width - 1) & (*index == i as i32 + 1)))
+                                .collect();
+
+        let is_deepest = check_indices
+                            .iter()
+                            .all(|depth_index| depth < &seafloor_array[*depth_index as usize]);
+
+        if is_deepest {
+            basin_sizes.push(check_basin_neighbours(&i, &seafloor_array, &seafloor_width, &total_length).iter().count() as i32);
+        }
+    }
+
+    basin_sizes.sort();
+    basin_sizes.reverse();
+    
+    return basin_sizes[..3].iter().product();
+}
+
 // like a lot of other languages rust starts execution from main()
 fn main() {
     // hello
@@ -994,4 +1112,13 @@ fn main() {
     println!("Number of 1, 4, 7, 8 digits are {}", sub_digit_count);
     let sub_number_sum = get_sub_display_number_values_and_sums(&sub_num);
     println!("Sum of outputs are {}", sub_number_sum);
+
+    // day 9 start
+    println!("Advent of Code 2021 Day 8");
+    let path = "./data/day9.txt";
+    let seafloor_map = read_txt_strings(&path).expect("Something went wrong reading input data");
+    let seafloor_risk = get_seafloor_risk(&seafloor_map);
+    println!("Sum of seafloor risk is {}", seafloor_risk);
+    let basin_risk = get_seafloor_basin_risk(&seafloor_map);
+    println!("Product of biggest three basins are {}", basin_risk);
 }
