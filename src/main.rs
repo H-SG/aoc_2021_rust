@@ -971,11 +971,14 @@ fn check_basin_neighbours(basin_index: &usize, seafloor_array: &Vec<i32>, seaflo
         } else {
             // we need to check the value and it's neighbours
             basin_indexes.push(check_index as i32);
+            // if we don't do this we fall into infinite loops
             if seafloor_array[check_index as usize] > seafloor_array[*basin_index] {
+                // it's happening!
                 basin_indexes.extend(check_basin_neighbours(&(check_index as usize), seafloor_array, seafloor_width, total_length));
             }
         }
     }
+    // we need to strip out duplicate indices, because it can happen
     return basin_indexes.into_iter().unique().collect();
 }
 
