@@ -1031,6 +1031,261 @@ fn get_seafloor_basin_risk(seafloor_map: &[String]) -> i32 {
     return basin_sizes[..3].iter().product();
 }
 
+// day 10 part 1
+fn get_error_score_parse_nav_chunks(nav_chunks: &[String]) -> i32 {
+    let mut error_score = 0;
+    for line in nav_chunks {
+        let char_pairs: Vec<char> = line.chars().collect();
+        let mut paired_array = vec![false; char_pairs.len()];
+
+        // search for ending closures without matching starting closures
+        for (i, c) in char_pairs.iter().enumerate() {
+            match c {
+                ')' => {
+                    for j in 1..(i + 1) {
+                        let prev_c = char_pairs[i - j];
+                        let prev_paired = &paired_array[i - j];
+                        if (prev_c != '(') & (prev_paired == &false) {
+                            // the previous pair is not closed
+                            break
+                        } else if (prev_c == '(') & (prev_paired == &false) {
+                            // we've found our matching enclosure, i guess borrow
+                            // hit me here in that i can't figure out which thing
+                            // to borrow or deborrow here and make it work
+                            paired_array[i] = true;
+                            paired_array[i - j] = true;
+                            break
+                        }
+                    }                    
+                },
+                '}' => {
+                    for j in 1..(i + 1) {
+                        let prev_c = char_pairs[i - j];
+                        let prev_paired = &paired_array[i - j];
+                        if (prev_c != '{') & (prev_paired == &false) {
+                            // the previous pair is not closed
+                            break
+                        } else if (prev_c == '{') & (prev_paired == &false) {
+                            // we've found our matching enclosure, i guess borrow
+                            // hit me here in that i can't figure out which thing
+                            // to borrow or deborrow here and make it work
+                            paired_array[i] = true;
+                            paired_array[i - j] = true;
+                            break
+                        }
+                    }                    
+                },
+                ']' => {
+                    for j in 1..(i + 1) {
+                        let prev_c = char_pairs[i - j];
+                        let prev_paired = &paired_array[i - j];
+                        if (prev_c != '[') & (prev_paired == &false) {
+                            // the previous pair is not closed
+                            break
+                        } else if (prev_c == '[') & (prev_paired == &false) {
+                            // we've found our matching enclosure, i guess borrow
+                            // hit me here in that i can't figure out which thing
+                            // to borrow or deborrow here and make it work
+                            paired_array[i] = true;
+                            paired_array[i - j] = true;
+                            break
+                        }
+                    }                    
+                },
+                '>' => {
+                    for j in 1..(i + 1) {
+                        let prev_c = char_pairs[i - j];
+                        let prev_paired = &paired_array[i - j];
+                        if (prev_c != '<') & (prev_paired == &false) {
+                            // the previous pair is not closed
+                            break
+                        } else if (prev_c == '<') & (prev_paired == &false) {
+                            // we've found our matching enclosure, i guess borrow
+                            // hit me here in that i can't figure out which thing
+                            // to borrow or deborrow here and make it work
+                            paired_array[i] = true;
+                            paired_array[i - j] = true;
+                            break
+                        }
+                    }                    
+                },
+                _ => ()
+            }
+        }
+
+        let unmatched_char_pairs: Vec<char> = char_pairs.iter()
+                                             .zip(paired_array.iter())
+                                             .filter(|p| !p.1)
+                                             .map(|p| *p.0)
+                                             .collect();
+
+        for c in unmatched_char_pairs {
+            match c {
+                ')' => {
+                    error_score += 3;
+                    break;
+                },
+                ']' => {
+                    error_score += 57;
+                    break;
+                },
+                '}' => {
+                    error_score += 1197;
+                    break;
+                },
+                '>' => {
+                    error_score += 25137;
+                    break;
+                },
+                _ => ()
+            }
+        }
+    }
+    return error_score
+}
+
+// day 10 function
+fn update_score(autocomplete_score: &mut i64, score: i64) {
+    *autocomplete_score *= 5;
+    *autocomplete_score += score;
+}
+
+// day 10 part 2
+fn get_autocomplete_score_parse_nav_chunks(nav_chunks: &[String]) -> i64 {
+    let mut autocomplete_scores: Vec<i64> = Vec::new();
+    for line in nav_chunks {
+        let mut autocomplete_score = 0;
+        let char_pairs: Vec<char> = line.chars().collect();
+        let mut paired_array = vec![false; char_pairs.len()];
+
+        // search for ending closures without matching starting closures
+        for (i, c) in char_pairs.iter().enumerate() {
+            match c {
+                ')' => {
+                    for j in 1..(i + 1) {
+                        let prev_c = char_pairs[i - j];
+                        let prev_paired = &paired_array[i - j];
+                        if (prev_c != '(') & (prev_paired == &false) {
+                            // the previous pair is not closed
+                            break
+                        } else if (prev_c == '(') & (prev_paired == &false) {
+                            // we've found our matching enclosure, i guess borrow
+                            // hit me here in that i can't figure out which thing
+                            // to borrow or deborrow here and make it work
+                            paired_array[i] = true;
+                            paired_array[i - j] = true;
+                            break
+                        }
+                    }                    
+                },
+                '}' => {
+                    for j in 1..(i + 1) {
+                        let prev_c = char_pairs[i - j];
+                        let prev_paired = &paired_array[i - j];
+                        if (prev_c != '{') & (prev_paired == &false) {
+                            // the previous pair is not closed
+                            break
+                        } else if (prev_c == '{') & (prev_paired == &false) {
+                            // we've found our matching enclosure, i guess borrow
+                            // hit me here in that i can't figure out which thing
+                            // to borrow or deborrow here and make it work
+                            paired_array[i] = true;
+                            paired_array[i - j] = true;
+                            break
+                        }
+                    }                    
+                },
+                ']' => {
+                    for j in 1..(i + 1) {
+                        let prev_c = char_pairs[i - j];
+                        let prev_paired = &paired_array[i - j];
+                        if (prev_c != '[') & (prev_paired == &false) {
+                            // the previous pair is not closed
+                            break
+                        } else if (prev_c == '[') & (prev_paired == &false) {
+                            // we've found our matching enclosure, i guess borrow
+                            // hit me here in that i can't figure out which thing
+                            // to borrow or deborrow here and make it work
+                            paired_array[i] = true;
+                            paired_array[i - j] = true;
+                            break
+                        }
+                    }                    
+                },
+                '>' => {
+                    for j in 1..(i + 1) {
+                        let prev_c = char_pairs[i - j];
+                        let prev_paired = &paired_array[i - j];
+                        if (prev_c != '<') & (prev_paired == &false) {
+                            // the previous pair is not closed
+                            break
+                        } else if (prev_c == '<') & (prev_paired == &false) {
+                            // we've found our matching enclosure, i guess borrow
+                            // hit me here in that i can't figure out which thing
+                            // to borrow or deborrow here and make it work
+                            paired_array[i] = true;
+                            paired_array[i - j] = true;
+                            break
+                        }
+                    }                    
+                },
+                _ => ()
+            }
+        }
+
+        let mut unmatched_char_pairs: Vec<char> = char_pairs.iter()
+                                             .zip(paired_array.iter())
+                                             .filter(|p| !p.1)
+                                             .map(|p| *p.0)
+                                             .collect();
+
+        let mut corrupt_line = false;
+        for c in unmatched_char_pairs.iter().copied() {
+            match c {
+                ')' => {
+                    corrupt_line = true;
+                    break;
+                },
+                ']' => {
+                    corrupt_line = true;
+                    break;
+                },
+                '}' => {
+                    corrupt_line = true;
+                    break;
+                },
+                '>' => {
+                    corrupt_line = true;
+                    break;
+                },
+                _ => ()
+            }
+        }
+
+        unmatched_char_pairs.reverse();
+        // let mut completing_chars: Vec<char> = Vec::new();
+
+        if corrupt_line {
+            continue
+        } else {
+            for c in unmatched_char_pairs {
+                match c {
+                    '[' => update_score(&mut autocomplete_score, 2),
+                    '{' => update_score(&mut autocomplete_score, 3),
+                    '(' => update_score(&mut autocomplete_score, 1),
+                    '<' => update_score(&mut autocomplete_score, 4),
+                    _ => ()
+                }
+            }
+        }
+        autocomplete_scores.push(autocomplete_score);
+    }
+    autocomplete_scores.sort();
+    let num_scores = autocomplete_scores.len();
+    let score_index = ((num_scores as f32) / 2.0).floor() as usize;
+    return autocomplete_scores[score_index]
+}
+
 // like a lot of other languages rust starts execution from main()
 fn main() {
     // hello
@@ -1117,11 +1372,21 @@ fn main() {
     println!("Sum of outputs are {}", sub_number_sum);
 
     // day 9 start
-    println!("Advent of Code 2021 Day 8");
+    println!("Advent of Code 2021 Day 9");
     let path = "./data/day9.txt";
     let seafloor_map = read_txt_strings(&path).expect("Something went wrong reading input data");
     let seafloor_risk = get_seafloor_risk(&seafloor_map);
     println!("Sum of seafloor risk is {}", seafloor_risk);
     let basin_risk = get_seafloor_basin_risk(&seafloor_map);
     println!("Product of biggest three basins are {}", basin_risk);
+
+    // day 10 start
+    println!("Advent of Code 2021 Day 10");
+    let path = "./data/day10.txt";
+    let nav_chunks = read_txt_strings(&path).expect("Something went wrong reading input data");
+    let syntax_error_score = get_error_score_parse_nav_chunks(&nav_chunks);
+    println!("Nav syntax error score is {}", syntax_error_score);
+    let autocomplete_score = get_autocomplete_score_parse_nav_chunks(&nav_chunks);
+    println!("Middle autocomplete score is {}", autocomplete_score);
+    
 }
