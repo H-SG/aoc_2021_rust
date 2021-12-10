@@ -57,3 +57,6 @@ I'll be honest, I'm not entirely sure how to not make this look nicer. Otherwise
 Nothing too surprising here, but I did get a chance to use recursion! I initially planned to use a 2d array map, but it was easier to just keep track of the seafloor width and use offsets as needed. I do like the filters I build into the index offsets to make sure we are always in valid bounds.
 
 Did I mention I used recursion?
+
+### Day 10
+What can I say about my first solution... You can go and look it up in the commit history, but suffice to say it was very ugly. I made the logic for finding pairs overly complex based on flawed reasoning from my side. It got the right answer, but at what cost. I had in my mind the idea when I started to have a list from which items got dynamically popped, why I didn't do that the first time around is a mystery to me.

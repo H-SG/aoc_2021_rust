@@ -595,35 +595,7 @@ fn get_pair_crossings(vectors: &Vec<Vec<i32>>) -> i32 {
     return crossings as i32
 }
 
-// day 6 part 1 - deprecated because slow
-// fn get_fish_population(fish_ages: &[String], days: i32) -> i32 {
-//     let mut fish: Vec<i32> = fish_ages[0]
-//         .split(',')
-//         .map(|timer| timer.trim().parse().unwrap())
-//         .collect();
-
-//     // this will totally not be slow, right?
-//     for _ in 0..days {
-//         // check if any fish time 0
-//         let ready_fish = fish
-//             .iter()
-//             .filter(|timer| **timer==0)
-//             .count();
-
-//         // add new fish
-//         for _ in 0..ready_fish {
-//             fish.push(9);
-//         }
-
-//         // subtract all timers
-//         fish.iter_mut().for_each(|timer| *timer -= 1);
-//         fish.iter_mut().filter(|timer| **timer == -1).for_each(|timer| *timer = 6);
-//     }
-
-//     return fish.len() as i32
-// }
-
-// day 6 part 2
+// day 6 part 1 and 2
 fn get_fish_population_faster(fish_ages: &[String], days: i32) -> i64 {
     // get our starting fish
     let fish: Vec<i64> = fish_ages[0]
@@ -665,7 +637,6 @@ fn median(numbers: &mut Vec<i32>) -> f64 {
         return numbers[length / 2] as f64
     }
 }
-
 
 // day 7 part 1
 fn get_crab_fuel_cost(crab_pos: &[String]) -> f64 {
@@ -1034,252 +1005,83 @@ fn get_seafloor_basin_risk(seafloor_map: &[String]) -> i32 {
 // day 10 part 1
 fn get_error_score_parse_nav_chunks(nav_chunks: &[String]) -> i32 {
     let mut error_score = 0;
+    let pair_map = HashMap::from([
+        ('(',')'),
+        ('[',']'),
+        ('{','}'),
+        ('<','>')
+    ]);
+    let error_score_map = HashMap::from([
+        (')',3),
+        (']',57),
+        ('}',1197),
+        ('>',25137)
+    ]);
     for line in nav_chunks {
-        let char_pairs: Vec<char> = line.chars().collect();
-        let mut paired_array = vec![false; char_pairs.len()];
+        let mut unmatched_chars: Vec<char> = Vec::new();
 
-        // search for ending closures without matching starting closures
-        for (i, c) in char_pairs.iter().enumerate() {
+        for c in line.chars() {
             match c {
-                ')' => {
-                    for j in 1..(i + 1) {
-                        let prev_c = char_pairs[i - j];
-                        let prev_paired = &paired_array[i - j];
-                        if (prev_c != '(') & (prev_paired == &false) {
-                            // the previous pair is not closed
-                            break
-                        } else if (prev_c == '(') & (prev_paired == &false) {
-                            // we've found our matching enclosure, i guess borrow
-                            // hit me here in that i can't figure out which thing
-                            // to borrow or deborrow here and make it work
-                            paired_array[i] = true;
-                            paired_array[i - j] = true;
-                            break
-                        }
-                    }                    
-                },
-                '}' => {
-                    for j in 1..(i + 1) {
-                        let prev_c = char_pairs[i - j];
-                        let prev_paired = &paired_array[i - j];
-                        if (prev_c != '{') & (prev_paired == &false) {
-                            // the previous pair is not closed
-                            break
-                        } else if (prev_c == '{') & (prev_paired == &false) {
-                            // we've found our matching enclosure, i guess borrow
-                            // hit me here in that i can't figure out which thing
-                            // to borrow or deborrow here and make it work
-                            paired_array[i] = true;
-                            paired_array[i - j] = true;
-                            break
-                        }
-                    }                    
-                },
-                ']' => {
-                    for j in 1..(i + 1) {
-                        let prev_c = char_pairs[i - j];
-                        let prev_paired = &paired_array[i - j];
-                        if (prev_c != '[') & (prev_paired == &false) {
-                            // the previous pair is not closed
-                            break
-                        } else if (prev_c == '[') & (prev_paired == &false) {
-                            // we've found our matching enclosure, i guess borrow
-                            // hit me here in that i can't figure out which thing
-                            // to borrow or deborrow here and make it work
-                            paired_array[i] = true;
-                            paired_array[i - j] = true;
-                            break
-                        }
-                    }                    
-                },
-                '>' => {
-                    for j in 1..(i + 1) {
-                        let prev_c = char_pairs[i - j];
-                        let prev_paired = &paired_array[i - j];
-                        if (prev_c != '<') & (prev_paired == &false) {
-                            // the previous pair is not closed
-                            break
-                        } else if (prev_c == '<') & (prev_paired == &false) {
-                            // we've found our matching enclosure, i guess borrow
-                            // hit me here in that i can't figure out which thing
-                            // to borrow or deborrow here and make it work
-                            paired_array[i] = true;
-                            paired_array[i - j] = true;
-                            break
-                        }
-                    }                    
-                },
-                _ => ()
-            }
-        }
-
-        let unmatched_char_pairs: Vec<char> = char_pairs.iter()
-                                             .zip(paired_array.iter())
-                                             .filter(|p| !p.1)
-                                             .map(|p| *p.0)
-                                             .collect();
-
-        for c in unmatched_char_pairs {
-            match c {
-                ')' => {
-                    error_score += 3;
-                    break;
-                },
-                ']' => {
-                    error_score += 57;
-                    break;
-                },
-                '}' => {
-                    error_score += 1197;
-                    break;
-                },
-                '>' => {
-                    error_score += 25137;
-                    break;
-                },
-                _ => ()
+                '(' => unmatched_chars.push(c),
+                '[' => unmatched_chars.push(c),
+                '<' => unmatched_chars.push(c),
+                '{' => unmatched_chars.push(c),
+                _ => {
+                    if c == pair_map[unmatched_chars.last().unwrap()] {
+                        unmatched_chars.pop();
+                    } else {
+                        error_score += error_score_map[&c];
+                        break;
+                    }
+                }
             }
         }
     }
     return error_score
 }
 
-// day 10 function
-fn update_score(autocomplete_score: &mut i64, score: i64) {
-    *autocomplete_score *= 5;
-    *autocomplete_score += score;
-}
-
 // day 10 part 2
 fn get_autocomplete_score_parse_nav_chunks(nav_chunks: &[String]) -> i64 {
     let mut autocomplete_scores: Vec<i64> = Vec::new();
-    for line in nav_chunks {
+    let pair_map = HashMap::from([
+        ('(',')'),
+        ('[',']'),
+        ('{','}'),
+        ('<','>')
+    ]);
+    let error_score_map = HashMap::from([
+        ('(',1),
+        ('[',2),
+        ('{',3),
+        ('<',4)
+    ]);
+    'outer: for line in nav_chunks {
         let mut autocomplete_score = 0;
-        let char_pairs: Vec<char> = line.chars().collect();
-        let mut paired_array = vec![false; char_pairs.len()];
+        let mut unmatched_chars: Vec<char> = Vec::new();
 
-        // search for ending closures without matching starting closures
-        for (i, c) in char_pairs.iter().enumerate() {
+        for c in line.chars() {
             match c {
-                ')' => {
-                    for j in 1..(i + 1) {
-                        let prev_c = char_pairs[i - j];
-                        let prev_paired = &paired_array[i - j];
-                        if (prev_c != '(') & (prev_paired == &false) {
-                            // the previous pair is not closed
-                            break
-                        } else if (prev_c == '(') & (prev_paired == &false) {
-                            // we've found our matching enclosure, i guess borrow
-                            // hit me here in that i can't figure out which thing
-                            // to borrow or deborrow here and make it work
-                            paired_array[i] = true;
-                            paired_array[i - j] = true;
-                            break
-                        }
-                    }                    
-                },
-                '}' => {
-                    for j in 1..(i + 1) {
-                        let prev_c = char_pairs[i - j];
-                        let prev_paired = &paired_array[i - j];
-                        if (prev_c != '{') & (prev_paired == &false) {
-                            // the previous pair is not closed
-                            break
-                        } else if (prev_c == '{') & (prev_paired == &false) {
-                            // we've found our matching enclosure, i guess borrow
-                            // hit me here in that i can't figure out which thing
-                            // to borrow or deborrow here and make it work
-                            paired_array[i] = true;
-                            paired_array[i - j] = true;
-                            break
-                        }
-                    }                    
-                },
-                ']' => {
-                    for j in 1..(i + 1) {
-                        let prev_c = char_pairs[i - j];
-                        let prev_paired = &paired_array[i - j];
-                        if (prev_c != '[') & (prev_paired == &false) {
-                            // the previous pair is not closed
-                            break
-                        } else if (prev_c == '[') & (prev_paired == &false) {
-                            // we've found our matching enclosure, i guess borrow
-                            // hit me here in that i can't figure out which thing
-                            // to borrow or deborrow here and make it work
-                            paired_array[i] = true;
-                            paired_array[i - j] = true;
-                            break
-                        }
-                    }                    
-                },
-                '>' => {
-                    for j in 1..(i + 1) {
-                        let prev_c = char_pairs[i - j];
-                        let prev_paired = &paired_array[i - j];
-                        if (prev_c != '<') & (prev_paired == &false) {
-                            // the previous pair is not closed
-                            break
-                        } else if (prev_c == '<') & (prev_paired == &false) {
-                            // we've found our matching enclosure, i guess borrow
-                            // hit me here in that i can't figure out which thing
-                            // to borrow or deborrow here and make it work
-                            paired_array[i] = true;
-                            paired_array[i - j] = true;
-                            break
-                        }
-                    }                    
-                },
-                _ => ()
-            }
-        }
-
-        let mut unmatched_char_pairs: Vec<char> = char_pairs.iter()
-                                             .zip(paired_array.iter())
-                                             .filter(|p| !p.1)
-                                             .map(|p| *p.0)
-                                             .collect();
-
-        let mut corrupt_line = false;
-        for c in unmatched_char_pairs.iter().copied() {
-            match c {
-                ')' => {
-                    corrupt_line = true;
-                    break;
-                },
-                ']' => {
-                    corrupt_line = true;
-                    break;
-                },
-                '}' => {
-                    corrupt_line = true;
-                    break;
-                },
-                '>' => {
-                    corrupt_line = true;
-                    break;
-                },
-                _ => ()
-            }
-        }
-
-        unmatched_char_pairs.reverse();
-        // let mut completing_chars: Vec<char> = Vec::new();
-
-        if corrupt_line {
-            continue
-        } else {
-            for c in unmatched_char_pairs {
-                match c {
-                    '[' => update_score(&mut autocomplete_score, 2),
-                    '{' => update_score(&mut autocomplete_score, 3),
-                    '(' => update_score(&mut autocomplete_score, 1),
-                    '<' => update_score(&mut autocomplete_score, 4),
-                    _ => ()
+                '(' => unmatched_chars.push(c),
+                '[' => unmatched_chars.push(c),
+                '<' => unmatched_chars.push(c),
+                '{' => unmatched_chars.push(c),
+                _ => {
+                    if c == pair_map[unmatched_chars.last().unwrap()] {
+                        unmatched_chars.pop();
+                    } else {
+                        continue 'outer;
+                    }
                 }
             }
         }
+
+        // calculate syntax score
+        unmatched_chars.reverse();
+        unmatched_chars.iter().for_each(|c| autocomplete_score = (autocomplete_score * 5) + error_score_map[c]);
         autocomplete_scores.push(autocomplete_score);
     }
+
+    // get the middle score value
     autocomplete_scores.sort();
     let num_scores = autocomplete_scores.len();
     let score_index = ((num_scores as f32) / 2.0).floor() as usize;
@@ -1387,6 +1189,5 @@ fn main() {
     let syntax_error_score = get_error_score_parse_nav_chunks(&nav_chunks);
     println!("Nav syntax error score is {}", syntax_error_score);
     let autocomplete_score = get_autocomplete_score_parse_nav_chunks(&nav_chunks);
-    println!("Middle autocomplete score is {}", autocomplete_score);
-    
+    println!("Middle autocomplete score is {}", autocomplete_score);    
 }
