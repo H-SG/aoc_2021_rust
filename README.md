@@ -60,3 +60,6 @@ Did I mention I used recursion?
 
 ### Day 10
 What can I say about my first solution... You can go and look it up in the commit history, but suffice to say it was very ugly. I made the logic for finding pairs overly complex based on flawed reasoning from my side. It got the right answer, but at what cost. I had in my mind the idea when I started to have a list from which items got dynamically popped, why I didn't do that the first time around is a mystery to me.
+
+### Day 11
+Took me some time to make sure I understood the logic of what was happening. I think my solution is a bit hacky in handling squids only flashing once per step, and I really should have used a datastructure here for the squids. Each squid could have a flashed state for the current cycle within the step, indices of it's neighbours, and it's current energy level. This would've likely made the loops a lot neater, but hey, the hack worked and going from part 1 to 2 was trivial.

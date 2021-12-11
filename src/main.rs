@@ -1101,7 +1101,7 @@ fn get_squid_flashes(squid_energy: &[String], steps: usize) -> i64 {
 
     let check_index_offsets = [-1, 1, -(squid_width as i32), squid_width as i32, -(squid_width as i32) + 1, squid_width as i32 + 1, -(squid_width as i32) - 1, squid_width as i32 - 1];
 
-    for i in 0..steps {
+    for _i in 0..steps {
         let mut squids_finished = false;
 
         // we do step 1
@@ -1118,26 +1118,14 @@ fn get_squid_flashes(squid_energy: &[String], steps: usize) -> i64 {
                                                                  .filter(|index| index < &(squid_count as i32))
                                                                  // if we are on the left edge, we don't want vals
                                                                  // one to the left of the current index
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == 0) & (*index == j as i32 - 1)
-                                                                    ))
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == 0) & (*index == j as i32 - (squid_width + 1) as i32)
-                                                                    ))
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == 0) & (*index == j as i32 + (squid_width - 1) as i32)
-                                                                    ))
+                                                                 .filter(|index| !((j % squid_width == 0) & (*index == j as i32 - 1)))
+                                                                 .filter(|index| !((j % squid_width == 0) & (*index == j as i32 - (squid_width + 1) as i32)))
+                                                                 .filter(|index| !((j % squid_width == 0) & (*index == j as i32 + (squid_width - 1) as i32)))
                                                                  // if we are on the right edge, we don't want any
                                                                  // to the right of the current index
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 + 1)
-                                                                    ))
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 - (squid_width - 1) as i32)
-                                                                    ))
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 + (squid_width + 1) as i32)
-                                                                    ))
+                                                                 .filter(|index| !((j % squid_width == squid_width - 1) & (*index == j as i32 + 1)))
+                                                                 .filter(|index| !((j % squid_width == squid_width - 1) & (*index == j as i32 - (squid_width - 1) as i32)))
+                                                                 .filter(|index| !((j % squid_width == squid_width - 1) & (*index == j as i32 + (squid_width + 1) as i32)))
                                                                  .collect();
                 
                 if squid_array[j] > 9 {
@@ -1149,11 +1137,14 @@ fn get_squid_flashes(squid_energy: &[String], steps: usize) -> i64 {
                 }
             }
 
+            // check if there are no further squids to trigger in this step cycle
             squids_finished = squid_array.iter().all(|s| *s <= 9);
 
+            // count flashes and set flashed squids to 0
             if squids_finished {
                 squid_array.iter_mut().filter(|s| **s < 0).for_each(|s| *s = 0);
                 flashes += squid_array.iter().filter(|s| **s == 0).count() as i64;
+                // if needed we can print the grid for debugging
                 // println!("After Step {}:", i + 1);
                 // for (j, squid) in squid_array.iter().enumerate() {
                 //     print!("{}",squid);
@@ -1169,7 +1160,6 @@ fn get_squid_flashes(squid_energy: &[String], steps: usize) -> i64 {
 
 // day 11 part 2
 fn get_squid_steps_until_sync_flashes(squid_energy: &[String]) -> i64 {
-    let mut flashes: i64 = 0;
     let squid_width = squid_energy[0].len();
     let mut squid_array: Vec<i32> = squid_energy.iter()                                
                                                 .map(|s| s.chars().map(|c| c.to_string().parse().unwrap()).collect::<Vec<i32>>())
@@ -1200,26 +1190,14 @@ fn get_squid_steps_until_sync_flashes(squid_energy: &[String]) -> i64 {
                                                                  .filter(|index| index < &(squid_count as i32))
                                                                  // if we are on the left edge, we don't want vals
                                                                  // one to the left of the current index
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == 0) & (*index == j as i32 - 1)
-                                                                    ))
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == 0) & (*index == j as i32 - (squid_width + 1) as i32)
-                                                                    ))
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == 0) & (*index == j as i32 + (squid_width - 1) as i32)
-                                                                    ))
+                                                                 .filter(|index| !((j % squid_width == 0) & (*index == j as i32 - 1)))
+                                                                 .filter(|index| !((j % squid_width == 0) & (*index == j as i32 - (squid_width + 1) as i32)))
+                                                                 .filter(|index| !((j % squid_width == 0) & (*index == j as i32 + (squid_width - 1) as i32)))
                                                                  // if we are on the right edge, we don't want any
                                                                  // to the right of the current index
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 + 1)
-                                                                    ))
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 - (squid_width - 1) as i32)
-                                                                    ))
-                                                                 .filter(|index| !(
-                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 + (squid_width + 1) as i32)
-                                                                    ))
+                                                                 .filter(|index| !((j % squid_width == squid_width - 1) & (*index == j as i32 + 1)))
+                                                                 .filter(|index| !((j % squid_width == squid_width - 1) & (*index == j as i32 - (squid_width - 1) as i32)))
+                                                                 .filter(|index| !((j % squid_width == squid_width - 1) & (*index == j as i32 + (squid_width + 1) as i32)))
                                                                  .collect();
                 
                 if squid_array[j] > 9 {
@@ -1234,21 +1212,11 @@ fn get_squid_steps_until_sync_flashes(squid_energy: &[String]) -> i64 {
             squids_finished = squid_array.iter().all(|s| *s <= 9);
 
             if squids_finished {
-                squid_array.iter_mut().filter(|s| **s < 0).for_each(|s| *s = 0);
-                flashes += squid_array.iter().filter(|s| **s == 0).count() as i64;
-                // println!("After Step {}:", i + 1);
-                // for (j, squid) in squid_array.iter().enumerate() {
-                //     print!("{}",squid);
-                //     if j % squid_width == 9 {
-                //         print!("\n");
-                //     }
-                // }                
+                squid_array.iter_mut().filter(|s| **s < 0).for_each(|s| *s = 0);      
             }            
         }
-
         // lets check if all synced
         sync_flashes = squid_array.iter().all(|s| *s == 0);
-
     }
     return num_steps
 }
