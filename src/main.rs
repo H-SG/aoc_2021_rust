@@ -1088,6 +1088,171 @@ fn get_autocomplete_score_parse_nav_chunks(nav_chunks: &[String]) -> i64 {
     return autocomplete_scores[score_index]
 }
 
+// day 11 part 1
+fn get_squid_flashes(squid_energy: &[String], steps: usize) -> i64 {
+    let mut flashes: i64 = 0;
+    let squid_width = squid_energy[0].len();
+    let mut squid_array: Vec<i32> = squid_energy.iter()                                
+                                                .map(|s| s.chars().map(|c| c.to_string().parse().unwrap()).collect::<Vec<i32>>())
+                                                .flatten()
+                                                .collect();
+
+    let squid_count = squid_array.len();
+
+    let check_index_offsets = [-1, 1, -(squid_width as i32), squid_width as i32, -(squid_width as i32) + 1, squid_width as i32 + 1, -(squid_width as i32) - 1, squid_width as i32 - 1];
+
+    for i in 0..steps {
+        let mut squids_finished = false;
+
+        // we do step 1
+        squid_array.iter_mut().for_each(|s| *s += 1);
+
+        // let's just naively try to loop through these then
+        while squids_finished == false {
+            for j in 0..squid_count {
+                let check_indices: Vec<i32> = check_index_offsets.iter()
+                                                                 .map(|index| (j as i32) + index)
+                                                                 // we don't want any indices before the start
+                                                                 .filter(|index| index >= &0)
+                                                                 // we don't want any indices after the end
+                                                                 .filter(|index| index < &(squid_count as i32))
+                                                                 // if we are on the left edge, we don't want vals
+                                                                 // one to the left of the current index
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == 0) & (*index == j as i32 - 1)
+                                                                    ))
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == 0) & (*index == j as i32 - (squid_width + 1) as i32)
+                                                                    ))
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == 0) & (*index == j as i32 + (squid_width - 1) as i32)
+                                                                    ))
+                                                                 // if we are on the right edge, we don't want any
+                                                                 // to the right of the current index
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 + 1)
+                                                                    ))
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 - (squid_width - 1) as i32)
+                                                                    ))
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 + (squid_width + 1) as i32)
+                                                                    ))
+                                                                 .collect();
+                
+                if squid_array[j] > 9 {
+                    // this is very hacky, i should really create some sort of data structure for the squids
+                    squid_array[j] = -1000;
+                    for check_index in check_indices {
+                        squid_array[check_index as usize] += 1;
+                    }
+                }
+            }
+
+            squids_finished = squid_array.iter().all(|s| *s <= 9);
+
+            if squids_finished {
+                squid_array.iter_mut().filter(|s| **s < 0).for_each(|s| *s = 0);
+                flashes += squid_array.iter().filter(|s| **s == 0).count() as i64;
+                // println!("After Step {}:", i + 1);
+                // for (j, squid) in squid_array.iter().enumerate() {
+                //     print!("{}",squid);
+                //     if j % squid_width == 9 {
+                //         print!("\n");
+                //     }
+                // }                
+            }            
+        }
+    }
+    return flashes
+}
+
+// day 11 part 2
+fn get_squid_steps_until_sync_flashes(squid_energy: &[String]) -> i64 {
+    let mut flashes: i64 = 0;
+    let squid_width = squid_energy[0].len();
+    let mut squid_array: Vec<i32> = squid_energy.iter()                                
+                                                .map(|s| s.chars().map(|c| c.to_string().parse().unwrap()).collect::<Vec<i32>>())
+                                                .flatten()
+                                                .collect();
+
+    let squid_count = squid_array.len();
+
+    let check_index_offsets = [-1, 1, -(squid_width as i32), squid_width as i32, -(squid_width as i32) + 1, squid_width as i32 + 1, -(squid_width as i32) - 1, squid_width as i32 - 1];
+    let mut sync_flashes = false;
+    let mut num_steps = 0;
+
+    while sync_flashes == false {
+        let mut squids_finished = false;
+        num_steps += 1;
+
+        // we do step 1
+        squid_array.iter_mut().for_each(|s| *s += 1);
+
+        // let's just naively try to loop through these then
+        while squids_finished == false {
+            for j in 0..squid_count {
+                let check_indices: Vec<i32> = check_index_offsets.iter()
+                                                                 .map(|index| (j as i32) + index)
+                                                                 // we don't want any indices before the start
+                                                                 .filter(|index| index >= &0)
+                                                                 // we don't want any indices after the end
+                                                                 .filter(|index| index < &(squid_count as i32))
+                                                                 // if we are on the left edge, we don't want vals
+                                                                 // one to the left of the current index
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == 0) & (*index == j as i32 - 1)
+                                                                    ))
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == 0) & (*index == j as i32 - (squid_width + 1) as i32)
+                                                                    ))
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == 0) & (*index == j as i32 + (squid_width - 1) as i32)
+                                                                    ))
+                                                                 // if we are on the right edge, we don't want any
+                                                                 // to the right of the current index
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 + 1)
+                                                                    ))
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 - (squid_width - 1) as i32)
+                                                                    ))
+                                                                 .filter(|index| !(
+                                                                     (j % squid_width == squid_width - 1) & (*index == j as i32 + (squid_width + 1) as i32)
+                                                                    ))
+                                                                 .collect();
+                
+                if squid_array[j] > 9 {
+                    // this is very hacky, i should really create some sort of data structure for the squids
+                    squid_array[j] = -1000;
+                    for check_index in check_indices {
+                        squid_array[check_index as usize] += 1;
+                    }
+                }
+            }
+
+            squids_finished = squid_array.iter().all(|s| *s <= 9);
+
+            if squids_finished {
+                squid_array.iter_mut().filter(|s| **s < 0).for_each(|s| *s = 0);
+                flashes += squid_array.iter().filter(|s| **s == 0).count() as i64;
+                // println!("After Step {}:", i + 1);
+                // for (j, squid) in squid_array.iter().enumerate() {
+                //     print!("{}",squid);
+                //     if j % squid_width == 9 {
+                //         print!("\n");
+                //     }
+                // }                
+            }            
+        }
+
+        // lets check if all synced
+        sync_flashes = squid_array.iter().all(|s| *s == 0);
+
+    }
+    return num_steps
+}
+
 // like a lot of other languages rust starts execution from main()
 fn main() {
     // hello
@@ -1189,5 +1354,14 @@ fn main() {
     let syntax_error_score = get_error_score_parse_nav_chunks(&nav_chunks);
     println!("Nav syntax error score is {}", syntax_error_score);
     let autocomplete_score = get_autocomplete_score_parse_nav_chunks(&nav_chunks);
-    println!("Middle autocomplete score is {}", autocomplete_score);    
+    println!("Middle autocomplete score is {}", autocomplete_score);
+
+    // day 11 start
+    println!("Advent of Code 2021 Day 11");
+    let path = "./data/day11.txt";
+    let squid_energy = read_txt_strings(&path).expect("Something went wrong reading input data");
+    let squid_flashes = get_squid_flashes(&squid_energy, 100);
+    println!("There are {} flashes after 100 steps", squid_flashes);
+    let steps_to_sync = get_squid_steps_until_sync_flashes(&squid_energy);
+    println!("Squid flashes syncronise after {} steps", steps_to_sync);
 }
